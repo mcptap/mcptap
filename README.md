@@ -1,5 +1,8 @@
 # mcptap
 
+[![ci](https://github.com/mcptap/mcptap/actions/workflows/ci.yml/badge.svg)](https://github.com/mcptap/mcptap/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+
 > Vitest, but it knows about MCP.
 
 Tap into your MCP server. Test, snapshot, and ship — without leaving your terminal.
