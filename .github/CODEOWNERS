@@ -1,0 +1,3 @@
+# Default reviewer for all changes.
+# External PRs require approval from a CODEOWNER before merge.
+* @jcornudella
