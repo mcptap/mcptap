@@ -1,0 +1,14 @@
+{
+  "name": "@mcptap-examples/sample-server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Minimal MCP server fixture for smoke-testing mcptap.",
+  "license": "MIT",
+  "main": "./server.mjs",
+  "dependencies": {
+    "mcptap": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  }
+}

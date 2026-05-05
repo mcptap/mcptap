@@ -1,0 +1,23 @@
+{
+  "name": "mcptap",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Vitest, but it knows about MCP — test harness for Model Context Protocol servers.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean && rm -rf packages/*/dist packages/*/*.tsbuildinfo",
+    "test": "vitest run",
+    "mcptap": "node packages/cli/bin/mcptap.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

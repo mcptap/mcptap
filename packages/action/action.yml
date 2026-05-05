@@ -1,0 +1,42 @@
+name: 'mcptap'
+description: 'Run mcptap tests against your MCP server in CI. Posts a PR comment with results.'
+author: 'mcptap'
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  config:
+    description: 'Path to mcptap.config.ts (auto-detected if omitted)'
+    required: false
+  filter:
+    description: 'Only run tests whose name contains this substring'
+    required: false
+  comment:
+    description: 'Post or update a PR comment with results (when run on a pull_request event)'
+    required: false
+    default: 'true'
+  github-token:
+    description: 'Token used to post the PR comment. Defaults to ${{ github.token }}.'
+    required: false
+    default: ${{ github.token }}
+  report-to:
+    description: 'POST results to a URL (or "dashboard" for the hosted endpoint)'
+    required: false
+  api-key:
+    description: 'Bearer token for --report-to'
+    required: false
+
+outputs:
+  passed:
+    description: 'Number of tests that passed'
+  failed:
+    description: 'Number of tests that failed'
+  total:
+    description: 'Total tests run'
+  status:
+    description: '"pass" or "fail"'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

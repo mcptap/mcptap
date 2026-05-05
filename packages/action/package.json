@@ -1,0 +1,22 @@
+{
+  "name": "@mcptap-internal/action",
+  "private": true,
+  "version": "0.0.0",
+  "description": "GitHub Action wrapper for mcptap.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "ncc build src/index.ts -o dist --minify --no-source-map-register",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.0",
+    "@actions/github": "^6.0.0",
+    "mcptap": "workspace:*"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.0"
+  }
+}

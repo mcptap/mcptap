@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "snapshots": {
+    "tool surface snapshot": "[\n  {\n    \"description\": \"Echoes the input text back to the caller.\",\n    \"inputSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"text\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"text\"\n      ],\n      \"type\": \"object\"\n    },\n    \"name\": \"echo\"\n  },\n  {\n    \"description\": \"Adds two numbers and returns the sum.\",\n    \"inputSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"a\": {\n          \"type\": \"number\"\n        },\n        \"b\": {\n          \"type\": \"number\"\n        }\n      },\n      \"required\": [\n        \"a\",\n        \"b\"\n      ],\n      \"type\": \"object\"\n    },\n    \"name\": \"add\"\n  }\n]",
+    "add tool result snapshot": "{\n  \"content\": [\n    {\n      \"text\": \"15\",\n      \"type\": \"text\"\n    }\n  ]\n}"
+  }
+}

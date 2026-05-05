@@ -1,0 +1,32 @@
+{
+  "name": "@mcptap/vitest",
+  "version": "0.0.0",
+  "description": "Vitest matchers for mcptap — `expect(server).toListTool('foo')`.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean && rm -rf dist *.tsbuildinfo"
+  },
+  "peerDependencies": {
+    "vitest": ">=2.0.0"
+  },
+  "dependencies": {
+    "@mcptap/core": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
