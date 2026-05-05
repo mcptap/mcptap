@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: build + unit tests + dogfood
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Dogfood — mcptap run against examples/sample-server
+        working-directory: examples/sample-server
+        run: node ../../packages/cli/bin/mcptap.mjs run
+
+      - name: Dogfood — in-process config
+        working-directory: examples/sample-server
+        run: node ../../packages/cli/bin/mcptap.mjs run --config mcptap.in-process.config.ts
+
+      - name: Dogfood — mcptap score
+        working-directory: examples/sample-server
+        run: node ../../packages/cli/bin/mcptap.mjs score --min-score 70

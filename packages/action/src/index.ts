@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { spawn } from 'node:child_process';
-import type { RunOutput } from 'mcptap';
+import type { RunOutput, ScoreReport } from 'mcptap';
 import { COMMENT_MARKER, renderPrComment } from './comment.js';
 
 async function main(): Promise<void> {
@@ -10,27 +10,58 @@ async function main(): Promise<void> {
   const reportTo = core.getInput('report-to');
   const apiKey = core.getInput('api-key');
   const postComment = core.getBooleanInput('comment');
+  const wantScore = core.getBooleanInput('score');
+  const minScore = core.getInput('min-score');
   const token = core.getInput('github-token');
 
-  const args = ['mcptap', 'run', '--json'];
-  if (config) args.push('--config', config);
-  if (filter) args.push('--filter', filter);
-  if (reportTo) args.push('--report-to', reportTo);
-  if (apiKey) args.push('--api-key', apiKey);
+  // 1. mcptap run
+  const runArgs = ['mcptap', 'run', '--json'];
+  if (config) runArgs.push('--config', config);
+  if (filter) runArgs.push('--filter', filter);
+  if (reportTo) runArgs.push('--report-to', reportTo);
+  if (apiKey) runArgs.push('--api-key', apiKey);
 
   core.startGroup('mcptap run');
-  const { stdout, exitCode } = await runCli(args);
+  const runResult = await runCli(runArgs);
   core.endGroup();
 
   let run: RunOutput;
   try {
-    run = JSON.parse(stdout);
+    run = JSON.parse(runResult.stdout);
   } catch (err) {
     core.setFailed(
-      `Could not parse mcptap output as JSON. exit=${exitCode}. err=${(err as Error).message}`,
+      `Could not parse mcptap output as JSON. exit=${runResult.exitCode}. err=${(err as Error).message}`,
     );
-    core.error(stdout.slice(0, 4000));
+    core.error(runResult.stdout.slice(0, 4000));
     return;
+  }
+
+  // 2. mcptap score (optional)
+  let score: ScoreReport | undefined;
+  if (wantScore) {
+    const scoreArgs = ['mcptap', 'score', '--json'];
+    if (config) scoreArgs.push('--config', config);
+    if (minScore) scoreArgs.push('--min-score', minScore);
+
+    core.startGroup('mcptap score');
+    const scoreResult = await runCli(scoreArgs);
+    core.endGroup();
+
+    try {
+      score = JSON.parse(scoreResult.stdout) as ScoreReport;
+    } catch (err) {
+      core.warning(
+        `Could not parse score output as JSON; skipping score section. err=${(err as Error).message}`,
+      );
+    }
+
+    // If --min-score was set and the score CLI exited non-zero, propagate that as a failure later.
+    if (minScore && scoreResult.exitCode !== 0 && run.status === 'pass') {
+      core.warning(
+        `mcptap score exited ${scoreResult.exitCode} (min-score=${minScore}); marking run as failed.`,
+      );
+      run.status = 'fail';
+    }
   }
 
   // Outputs
@@ -38,14 +69,18 @@ async function main(): Promise<void> {
   core.setOutput('failed', run.totals.failed);
   core.setOutput('total', run.totals.total);
   core.setOutput('status', run.status);
+  if (score) {
+    core.setOutput('score-average', score.summary.average);
+    core.setOutput('score-tokens', score.summary.total_tokens);
+  }
 
-  // Job summary (always written)
-  await core.summary.addRaw(renderPrComment(run)).write();
+  // Job summary (always)
+  await core.summary.addRaw(renderPrComment(run, score)).write();
 
   // PR comment (only on pull_request events)
   if (postComment && github.context.payload.pull_request && token) {
     try {
-      await postOrUpdateComment(token, run);
+      await postOrUpdateComment(token, run, score);
     } catch (err) {
       core.warning(`Failed to post PR comment: ${(err as Error).message}`);
     }
@@ -60,32 +95,29 @@ function runCli(args: string[]): Promise<{ stdout: string; exitCode: number }> {
   return new Promise((resolve) => {
     const child = spawn('npx', ['--yes', ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '';
-    let stderr = '';
     child.stdout.on('data', (chunk) => {
       stdout += chunk.toString();
     });
     child.stderr.on('data', (chunk) => {
-      const text = chunk.toString();
-      stderr += text;
-      core.info(text.trimEnd());
+      core.info(chunk.toString().trimEnd());
     });
     child.on('close', (code) => {
-      if (stderr.length === 0 && stdout.length > 0) {
-        // streamed nothing on stderr, mirror stdout (excluding JSON tail) to log
-      }
       resolve({ stdout, exitCode: code ?? 1 });
     });
   });
 }
 
-async function postOrUpdateComment(token: string, run: RunOutput): Promise<void> {
+async function postOrUpdateComment(
+  token: string,
+  run: RunOutput,
+  score: ScoreReport | undefined,
+): Promise<void> {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
   const issue_number = github.context.payload.pull_request!.number;
 
-  const body = renderPrComment(run);
+  const body = renderPrComment(run, score);
 
-  // Find existing comment by marker
   const existing = await octokit.rest.issues.listComments({
     owner,
     repo,

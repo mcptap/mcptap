@@ -1,10 +1,11 @@
 // @mcptap/vitest — Vitest matchers for mcptap.
 //
-//   import '@mcptap/vitest';            // side-effect import registers matchers
+//   import '@mcptap/vitest';
+//
 //   await expect(server).toListTool('echo');
 //   await expect(server).toListTools(['echo', 'add']);
-//
-// More matchers ship as the day-by-day plan progresses.
+//   await expect(server).toCallTool('echo', { text: 'hi' });
+//   await expect(server).toCallTool('echo', { text: 'hi' }, { containsText: 'hi' });
 
 import { expect } from 'vitest';
 import type { ServerHandle } from '@mcptap/core';
@@ -69,11 +70,75 @@ expect.extend({
           : `expected server to list exactly [${expected.join(', ')}]. Got: [${actual.join(', ')}]`,
     };
   },
+
+  async toCallTool(
+    received: unknown,
+    name: string,
+    args?: Record<string, unknown>,
+    options?: { containsText?: string; isError?: boolean },
+  ): Promise<MatcherResult> {
+    if (!isServerHandle(received)) {
+      return {
+        pass: false,
+        message: () => `expected a ServerHandle, got ${typeof received}`,
+      };
+    }
+    let result;
+    try {
+      result = await received.callTool(name, args);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        pass: false,
+        message: () => `callTool("${name}") threw: ${msg}`,
+      };
+    }
+
+    // Default expectation: not an error response.
+    const wantError = options?.isError ?? false;
+    if (Boolean(result.isError) !== wantError) {
+      return {
+        pass: false,
+        actual: result,
+        message: () =>
+          wantError
+            ? `expected callTool("${name}") to return isError: true, got isError: ${Boolean(result.isError)}`
+            : `expected callTool("${name}") to succeed, got isError: true (content: ${JSON.stringify(result.content)})`,
+      };
+    }
+
+    if (options?.containsText !== undefined) {
+      const text = result.content
+        .filter((b) => b.type === 'text' && typeof b.text === 'string')
+        .map((b) => b.text)
+        .join('\n');
+      if (!text.includes(options.containsText)) {
+        return {
+          pass: false,
+          actual: text,
+          expected: options.containsText,
+          message: () =>
+            `expected callTool("${name}") result to contain "${options.containsText}". Got: ${JSON.stringify(text)}`,
+        };
+      }
+    }
+
+    return {
+      pass: true,
+      actual: result,
+      message: () => `expected callTool("${name}") NOT to succeed, but it did`,
+    };
+  },
 });
 
 interface MCPMatchers<R = unknown> {
   toListTool(name: string): Promise<R>;
   toListTools(names: string[]): Promise<R>;
+  toCallTool(
+    name: string,
+    args?: Record<string, unknown>,
+    options?: { containsText?: string; isError?: boolean },
+  ): Promise<R>;
 }
 
 declare module 'vitest' {

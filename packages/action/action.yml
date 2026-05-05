@@ -16,6 +16,13 @@ inputs:
     description: 'Post or update a PR comment with results (when run on a pull_request event)'
     required: false
     default: 'true'
+  score:
+    description: 'Also run `mcptap score` and include tool-description quality scores in the PR comment'
+    required: false
+    default: 'true'
+  min-score:
+    description: 'Fail the action if any tool scores below this threshold (0–100)'
+    required: false
   github-token:
     description: 'Token used to post the PR comment. Defaults to ${{ github.token }}.'
     required: false
