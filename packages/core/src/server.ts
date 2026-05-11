@@ -10,10 +10,11 @@ import type {
   ServerSpawn,
   Tool,
 } from './types.js';
+import { VERSION } from './version.js';
 
 const MCPTAP_CLIENT_INFO = {
   name: 'mcptap',
-  version: '0.0.0',
+  version: VERSION,
 };
 
 /**

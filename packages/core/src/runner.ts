@@ -16,9 +16,9 @@ import {
   type TestResult,
   type Transport,
 } from './types.js';
+import { VERSION as MCPTAP_VERSION } from './version.js';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
-const MCPTAP_VERSION = '0.0.0';
 
 export type RunOptions = {
   meta?: RunOutput['meta'];

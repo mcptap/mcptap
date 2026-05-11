@@ -1,6 +1,7 @@
 // @mcptap/core — testing primitive for MCP servers.
 
 export { defineConfig, SCHEMA_VERSION } from './types.js';
+export { VERSION } from './version.js';
 export { spawnServer } from './server.js';
 export { runTests } from './runner.js';
 export { mcpLog, silenceStdoutLogging } from './log.js';

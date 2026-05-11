@@ -19,6 +19,8 @@ export {
   silenceStdoutLogging,
 } from '@mcptap/core';
 
+export { VERSION } from './version.js';
+
 export type {
   AssertionTest,
   CallToolResult,

@@ -7,8 +7,7 @@ import { runInit } from './init.js';
 import { reportTerminal } from './reporter.js';
 import { reportToDashboard, resolveReporterUrl } from './reporter-dashboard.js';
 import { scoreCommand } from './score-cmd.js';
-
-const VERSION = '0.0.0';
+import { VERSION } from './version.js';
 
 const runCommand = defineCommand({
   meta: {
