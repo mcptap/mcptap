@@ -1,8 +1,29 @@
 {
   "name": "@mcptap/core",
-  "version": "0.0.0",
-  "description": "Core library for mcptap — testing primitive for MCP servers.",
+  "version": "0.1.0",
+  "description": "Core library for mcptap — Vitest-style test harness for Model Context Protocol servers.",
   "license": "MIT",
+  "author": "Joan Cornudella",
+  "homepage": "https://github.com/mcptap/mcptap#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcptap/mcptap.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/mcptap/mcptap/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "testing",
+    "test-harness",
+    "ci",
+    "snapshot",
+    "typescript",
+    "agent-tools",
+    "json-rpc"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -18,7 +39,8 @@
   ],
   "scripts": {
     "build": "tsc -b",
-    "clean": "tsc -b --clean && rm -rf dist *.tsbuildinfo"
+    "clean": "tsc -b --clean && rm -rf dist *.tsbuildinfo",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

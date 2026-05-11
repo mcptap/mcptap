@@ -1,8 +1,27 @@
 {
   "name": "@mcptap/vitest",
-  "version": "0.0.0",
-  "description": "Vitest matchers for mcptap — `expect(server).toListTool('foo')`.",
+  "version": "0.1.0",
+  "description": "Vitest matchers for mcptap. `await expect(server).toListTool('foo')` and friends.",
   "license": "MIT",
+  "author": "Joan Cornudella",
+  "homepage": "https://github.com/mcptap/mcptap#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcptap/mcptap.git",
+    "directory": "packages/vitest"
+  },
+  "bugs": {
+    "url": "https://github.com/mcptap/mcptap/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "testing",
+    "vitest",
+    "vitest-matchers",
+    "typescript",
+    "mcptap"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -18,7 +37,8 @@
   ],
   "scripts": {
     "build": "tsc -b",
-    "clean": "tsc -b --clean && rm -rf dist *.tsbuildinfo"
+    "clean": "tsc -b --clean && rm -rf dist *.tsbuildinfo",
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
     "vitest": ">=2.0.0"

@@ -1,8 +1,30 @@
 {
   "name": "mcptap",
-  "version": "0.0.0",
-  "description": "Vitest, but it knows about MCP — test harness for Model Context Protocol servers.",
+  "version": "0.1.0",
+  "description": "Vitest, but it knows about MCP. Test harness, snapshot testing, GitHub Action, and tool-description quality scoring for Model Context Protocol servers.",
   "license": "MIT",
+  "author": "Joan Cornudella",
+  "homepage": "https://github.com/mcptap/mcptap#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcptap/mcptap.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/mcptap/mcptap/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "testing",
+    "test-harness",
+    "vitest",
+    "ci",
+    "snapshot",
+    "typescript",
+    "agent-tools",
+    "github-action"
+  ],
   "type": "module",
   "bin": {
     "mcptap": "./bin/mcptap.mjs"
@@ -22,7 +44,8 @@
   ],
   "scripts": {
     "build": "tsc -b",
-    "clean": "tsc -b --clean && rm -rf dist *.tsbuildinfo"
+    "clean": "tsc -b --clean && rm -rf dist *.tsbuildinfo",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@mcptap/core": "workspace:*",
