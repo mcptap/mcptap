@@ -1,0 +1,15 @@
+{
+  "name": "@mcptap-internal/health-report",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Weekly automated mcptap run against the top community MCP servers.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "run": "node ./run.mjs"
+  },
+  "dependencies": {
+    "jiti": "^2.4.0",
+    "mcptap": "workspace:*"
+  }
+}

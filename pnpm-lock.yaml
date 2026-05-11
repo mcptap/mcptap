@@ -30,6 +30,15 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
 
+  health-report:
+    dependencies:
+      jiti:
+        specifier: ^2.4.0
+        version: 2.6.1
+      mcptap:
+        specifier: workspace:*
+        version: link:../packages/cli
+
   packages/action:
     dependencies:
       '@actions/core':

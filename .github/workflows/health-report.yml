@@ -1,0 +1,65 @@
+name: health-report
+
+# Weekly automated mcptap run against the curated list of community MCP servers.
+# Output is committed as a PR (direct push would bypass branch protection on main).
+#
+# Manual trigger is also available from the Actions tab via "Run workflow".
+#
+# Setup notes:
+#   - Repo settings → Actions → General → "Allow GitHub Actions to create and
+#     approve pull requests" must be ENABLED. Otherwise create-pull-request fails.
+#   - The default GITHUB_TOKEN has the write permissions declared below; no PAT
+#     needed.
+
+on:
+  schedule:
+    # Mondays at 09:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  run:
+    name: weekly health report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace packages
+        run: pnpm build
+
+      - name: Run health report
+        run: node health-report/run.mjs
+
+      - name: Open PR with the new report
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: bot/health-report-${{ github.run_id }}
+          delete-branch: true
+          commit-message: "health-report: weekly run"
+          title: "health-report: weekly run"
+          body: |
+            Automated weekly mcptap run against the curated server list.
+
+            See `health-report/output/latest.md` for the full report.
+            Merge to publish (or close if something looks off).
+          labels: |
+            health-report
+            bot
+          add-paths: |
+            health-report/output/**
