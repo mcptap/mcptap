@@ -1,13 +1,31 @@
 import { defineCommand, runMain } from 'citty';
-import kleur from 'kleur';
 import { runTests } from '@mcptap/core';
 import { ConfigNotFoundError, loadConfig } from './config.js';
 import { detectGitMeta } from './git.js';
 import { runInit } from './init.js';
+import { installCommand } from './install-cmd.js';
 import { reportTerminal } from './reporter.js';
 import { reportToDashboard, resolveReporterUrl } from './reporter-dashboard.js';
 import { scoreCommand } from './score-cmd.js';
+import { logger, setLoggerSilent } from './utils/logger.js';
 import { VERSION } from './version.js';
+
+// EPIPE: piping `mcptap` into something that closes early (e.g. `... | head`)
+// must exit cleanly, not dump a stack trace.
+process.stdout.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EPIPE') process.exit(0);
+});
+
+// Graceful Ctrl-C / SIGTERM: print a single line and exit 130 — never a
+// stack trace from a half-finished promise.
+const onCancel = (): never => {
+  logger.break();
+  logger.log('Cancelled.');
+  logger.break();
+  process.exit(130);
+};
+process.on('SIGINT', onCancel);
+process.on('SIGTERM', onCancel);
 
 const runCommand = defineCommand({
   meta: {
@@ -44,13 +62,15 @@ const runCommand = defineCommand({
     },
   },
   async run({ args }) {
+    if (args.json) setLoggerSilent(true);
+
     let loaded;
     try {
       loaded = await loadConfig(args.config);
     } catch (err) {
       if (err instanceof ConfigNotFoundError) {
-        console.error(kleur.red(err.message));
-        console.error(kleur.dim('  hint: run `mcptap init` to scaffold one (lands day 5)'));
+        logger.error(err.message);
+        logger.dim('  hint: run `mcptap init` to scaffold one');
         process.exit(2);
       }
       throw err;
@@ -107,6 +127,7 @@ const main = defineCommand({
     run: runCommand,
     init: initCommand,
     score: scoreCommand,
+    install: installCommand,
   },
 });
 

@@ -51,7 +51,12 @@
     "@mcptap/core": "workspace:*",
     "citty": "^0.1.6",
     "jiti": "^2.4.0",
-    "kleur": "^4.1.5"
+    "kleur": "^4.1.5",
+    "ora": "^9.4.0",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/prompts": "^2.4.9"
   },
   "publishConfig": {
     "access": "public"

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { applyMasks, serializeForSnapshot } from './snapshot.js';
+import { applyMasks, compareSnapshot, serializeForSnapshot } from './snapshot.js';
 
 describe('smart defaults', () => {
   test('masks UUID strings', () => {
@@ -64,6 +64,18 @@ describe('path masking', () => {
     const input = { a: 1 };
     const out = applyMasks(input, { paths: ['x.y.z'], smartDefaults: false });
     expect(out).toEqual({ a: 1 });
+  });
+});
+
+describe('compareSnapshot', () => {
+  test('treats inherited object property names as ordinary snapshot names', () => {
+    const file = { schema_version: 1 as const, snapshots: {} };
+
+    expect(compareSnapshot('__proto__', { ok: true }, file).kind).toBe('created');
+    expect(compareSnapshot('toString', { ok: true }, file).kind).toBe('created');
+
+    expect(Object.hasOwn(file.snapshots, '__proto__')).toBe(true);
+    expect(Object.hasOwn(file.snapshots, 'toString')).toBe(true);
   });
 });
 

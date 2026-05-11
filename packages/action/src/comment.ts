@@ -8,17 +8,18 @@ export const COMMENT_MARKER = '<!-- mcptap:run -->';
 
 export function renderPrComment(run: RunOutput, score?: ScoreReport): string {
   const { totals, status, slug, duration_ms } = run;
+  const safeSlug = escapeInlineMarkdown(slug);
   const heading =
     status === 'pass'
-      ? `### mcptap · ${slug} · all green (${totals.total} test${totals.total === 1 ? '' : 's'})`
-      : `### mcptap · ${slug} · ${totals.failed} failed`;
+      ? `### mcptap · ${safeSlug} · all green (${totals.total} test${totals.total === 1 ? '' : 's'})`
+      : `### mcptap · ${safeSlug} · ${totals.failed} failed`;
 
   const meta: string[] = [];
   if (run.meta.commit_sha) {
-    meta.push(`commit \`${run.meta.commit_sha.slice(0, 7)}\``);
+    meta.push(`commit ${escapeInlineMarkdown(run.meta.commit_sha.slice(0, 7))}`);
   }
   if (run.meta.branch) {
-    meta.push(`branch \`${run.meta.branch}\``);
+    meta.push(`branch ${escapeInlineMarkdown(run.meta.branch)}`);
   }
   meta.push(formatDuration(duration_ms));
 
@@ -35,7 +36,7 @@ export function renderPrComment(run: RunOutput, score?: ScoreReport): string {
   lines.push('| - | - | - | - |');
   for (const r of run.results) {
     lines.push(
-      `| ${glyph(r)} | ${escapeMd(r.name)} | ${formatDuration(r.duration_ms)} | ${notes(r)} |`,
+      `| ${glyph(r)} | ${escapeTableCell(r.name)} | ${formatDuration(r.duration_ms)} | ${notes(r)} |`,
     );
   }
   lines.push('');
@@ -46,11 +47,9 @@ export function renderPrComment(run: RunOutput, score?: ScoreReport): string {
     lines.push('#### Snapshot drift');
     lines.push('');
     for (const r of drift) {
-      lines.push(`<details><summary><b>${escapeMd(r.name)}</b></summary>`);
+      lines.push(`<details><summary><b>${escapeInlineMarkdown(r.name)}</b></summary>`);
       lines.push('');
-      lines.push('```diff');
-      lines.push(r.snapshot?.diff ?? '');
-      lines.push('```');
+      lines.push(...fencedCode(r.snapshot?.diff ?? '', 'diff'));
       lines.push('</details>');
       lines.push('');
     }
@@ -64,11 +63,9 @@ export function renderPrComment(run: RunOutput, score?: ScoreReport): string {
     lines.push('#### Failures');
     lines.push('');
     for (const r of errors) {
-      lines.push(`<details><summary><b>${escapeMd(r.name)}</b></summary>`);
+      lines.push(`<details><summary><b>${escapeInlineMarkdown(r.name)}</b></summary>`);
       lines.push('');
-      lines.push('```');
-      lines.push(r.error?.message ?? '');
-      lines.push('```');
+      lines.push(...fencedCode(r.error?.message ?? ''));
       lines.push('</details>');
       lines.push('');
     }
@@ -117,7 +114,7 @@ function renderScoreSection(score: ScoreReport): string[] {
       .sort((a, b) => b.penalty - a.penalty)[0];
     const issueText = top ? `${top.message}` : '';
     lines.push(
-      `| \`${tool.name}\` | ${scoreCell(tool)} | ${tool.tokens} | ${escapeMd(issueText)} |`,
+      `| ${escapeTableCell(tool.name)} | ${scoreCell(tool)} | ${tool.tokens} | ${escapeTableCell(issueText)} |`,
     );
   }
   lines.push('');
@@ -162,7 +159,7 @@ function notes(r: TestResult): string {
   }
   if (r.status === 'fail' && r.error) {
     const first = r.error.message.split('\n')[0]?.slice(0, 80) ?? '';
-    return escapeMd(first);
+    return escapeTableCell(first);
   }
   return '';
 }
@@ -173,6 +170,25 @@ function formatDuration(ms: number): string {
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
-function escapeMd(s: string): string {
-  return s.replace(/\|/g, '\\|').replace(/\n/g, ' ');
+function escapeTableCell(s: string): string {
+  return escapeInlineMarkdown(s);
+}
+
+function escapeInlineMarkdown(s: string): string {
+  return s
+    .replace(/\r?\n/g, ' ')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/([\\`*_{}\[\]()#+\-.!|])/g, '\\$1')
+    .replace(/@/g, '&#64;');
+}
+
+function fencedCode(content: string, lang = ''): string[] {
+  let maxBackticks = 2;
+  for (const match of content.matchAll(/`+/g)) {
+    maxBackticks = Math.max(maxBackticks, match[0].length);
+  }
+  const fence = '`'.repeat(maxBackticks + 1);
+  return [`${fence}${lang}`, content, fence];
 }

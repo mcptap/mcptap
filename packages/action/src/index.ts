@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { spawn } from 'node:child_process';
 import type { RunOutput, ScoreReport } from 'mcptap';
+import { buildRunArgs, buildScoreArgs, envWithReporterApiKey } from './cli-args.js';
 import { COMMENT_MARKER, renderPrComment } from './comment.js';
 
 async function main(): Promise<void> {
@@ -14,15 +15,14 @@ async function main(): Promise<void> {
   const minScore = core.getInput('min-score');
   const token = core.getInput('github-token');
 
+  if (apiKey) core.setSecret(apiKey);
+
   // 1. mcptap run
-  const runArgs = ['mcptap', 'run', '--json'];
-  if (config) runArgs.push('--config', config);
-  if (filter) runArgs.push('--filter', filter);
-  if (reportTo) runArgs.push('--report-to', reportTo);
-  if (apiKey) runArgs.push('--api-key', apiKey);
+  const runArgs = buildRunArgs({ config, filter, reportTo, apiKey });
+  const cliEnv = envWithReporterApiKey(apiKey);
 
   core.startGroup('mcptap run');
-  const runResult = await runCli(runArgs);
+  const runResult = await runCli(runArgs, cliEnv);
   core.endGroup();
 
   let run: RunOutput;
@@ -39,12 +39,10 @@ async function main(): Promise<void> {
   // 2. mcptap score (optional)
   let score: ScoreReport | undefined;
   if (wantScore) {
-    const scoreArgs = ['mcptap', 'score', '--json'];
-    if (config) scoreArgs.push('--config', config);
-    if (minScore) scoreArgs.push('--min-score', minScore);
+    const scoreArgs = buildScoreArgs({ config, minScore });
 
     core.startGroup('mcptap score');
-    const scoreResult = await runCli(scoreArgs);
+    const scoreResult = await runCli(scoreArgs, cliEnv);
     core.endGroup();
 
     try {
@@ -91,9 +89,15 @@ async function main(): Promise<void> {
   }
 }
 
-function runCli(args: string[]): Promise<{ stdout: string; exitCode: number }> {
+function runCli(
+  args: string[],
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<{ stdout: string; exitCode: number }> {
   return new Promise((resolve) => {
-    const child = spawn('npx', ['--yes', ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn('npx', ['--yes', ...args], {
+      env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     let stdout = '';
     child.stdout.on('data', (chunk) => {
       stdout += chunk.toString();

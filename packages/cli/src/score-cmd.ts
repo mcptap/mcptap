@@ -2,6 +2,7 @@ import { defineCommand } from 'citty';
 import kleur from 'kleur';
 import { buildScoreReport, spawnServer, type ScoreReport, type ToolScore } from '@mcptap/core';
 import { ConfigNotFoundError, loadConfig } from './config.js';
+import { sanitizeTerminalText } from './terminal.js';
 
 export const scoreCommand = defineCommand({
   meta: {
@@ -73,15 +74,15 @@ export const scoreCommand = defineCommand({
   },
 });
 
-function renderScoreTerminal(
+export function renderScoreTerminal(
   report: ScoreReport,
   opts: { verbose: boolean },
 ): void {
   console.log();
-  console.log(`  ${kleur.bold('mcptap')} ${kleur.dim('score')} ${kleur.cyan(report.slug)}`);
+  console.log(`  ${kleur.bold('mcptap')} ${kleur.dim('score')} ${kleur.cyan(sanitizeTerminalText(report.slug))}`);
   console.log();
 
-  const nameW = Math.max(4, ...report.tools.map((t) => t.name.length));
+  const nameW = Math.max(4, ...report.tools.map((t) => sanitizeTerminalText(t.name).length));
 
   console.log(
     `  ${pad('Tool', nameW)}   ${pad('Score', 7)}  ${pad('Tokens', 7)}  Top issue`,
@@ -93,15 +94,15 @@ function renderScoreTerminal(
       .slice()
       .sort((a, b) => b.penalty - a.penalty)[0];
     const topMsg = top
-      ? `${kleur.dim(`−${top.penalty}`)} ${kleur.yellow(top.message)}`
+      ? `${kleur.dim(`−${top.penalty}`)} ${kleur.yellow(sanitizeTerminalText(top.message))}`
       : '';
     console.log(
-      `  ${pad(tool.name, nameW)}   ${scoreCell(tool)}  ${pad(String(tool.tokens), 7)}  ${topMsg}`,
+      `  ${pad(sanitizeTerminalText(tool.name), nameW)}   ${scoreCell(tool)}  ${pad(String(tool.tokens), 7)}  ${topMsg}`,
     );
     if (opts.verbose) {
       for (const issue of tool.issues.slice(1)) {
         console.log(
-          `  ${' '.repeat(nameW)}   ${' '.repeat(7)}  ${' '.repeat(7)}  ${kleur.dim(`−${issue.penalty}`)} ${kleur.yellow(issue.message)}`,
+          `  ${' '.repeat(nameW)}   ${' '.repeat(7)}  ${' '.repeat(7)}  ${kleur.dim(`−${issue.penalty}`)} ${kleur.yellow(sanitizeTerminalText(issue.message))}`,
         );
       }
     }

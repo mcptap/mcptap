@@ -1,9 +1,12 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
-import kleur from 'kleur';
 import { spawnServer, type Tool } from '@mcptap/core';
+import { highlighter, logger } from './utils/logger.js';
+import { sanitizeTerminalText } from './terminal.js';
+import { confirm, isNonInteractive } from './utils/prompt.js';
+import { spinner } from './utils/spinner.js';
 
-type Detected = {
+export type Detected = {
   packageName: string;
   slug: string;
   command: string;
@@ -28,48 +31,53 @@ const COMMON_BUILD_ENTRIES = [
 
 export async function runInit(opts: { force?: boolean } = {}): Promise<void> {
   const cwd = process.cwd();
-  console.log();
-  console.log(`  ${kleur.bold('mcptap')} ${kleur.dim('init')}`);
-  console.log();
+  logger.break();
+  logger.log(`  ${highlighter.bold('mcptap')} ${highlighter.dim('init')}`);
+  logger.break();
 
   const targetPath = join(cwd, TARGET_FILENAME);
   if (existsSync(targetPath) && !opts.force) {
-    console.error(
-      `  ${kleur.red('✗')} ${TARGET_FILENAME} already exists. Pass ${kleur.bold('--force')} to overwrite.`,
+    if (isNonInteractive()) {
+      logger.error(
+        `  ✗ ${TARGET_FILENAME} already exists. Pass ${highlighter.bold('--force')} to overwrite.`,
+      );
+      logger.break();
+      process.exit(2);
+    }
+    const proceed = await confirm(
+      `${TARGET_FILENAME} already exists. Overwrite?`,
+      false,
     );
-    console.log();
-    process.exit(2);
+    if (!proceed) {
+      logger.dim(`  Aborted. Existing ${TARGET_FILENAME} unchanged.`);
+      logger.break();
+      process.exit(0);
+    }
   }
 
+  const detectSpinner = spinner('Detecting MCP server...');
   const detected = detect(cwd);
   if (!detected) {
-    console.error(
-      `  ${kleur.red('✗')} No MCP server detected in this directory.`,
+    detectSpinner.fail('No MCP server detected in this directory.');
+    logger.dim(
+      `    Expected: package.json with @modelcontextprotocol/sdk and a runnable entry point.`,
     );
-    console.error(
-      kleur.dim(
-        `    Expected: package.json with @modelcontextprotocol/sdk and a runnable entry point.`,
-      ),
+    logger.dim(
+      `    For a remote server, scaffold manually — the docs have a streamable-http example.`,
     );
-    console.error(
-      kleur.dim(
-        `    For a remote server, scaffold manually — the docs have a streamable-http example.`,
-      ),
-    );
-    console.log();
+    logger.break();
     process.exit(2);
   }
+  detectSpinner.succeed(`Detected: ${highlighter.info(sanitizeTerminalText(detected.packageName))}`);
 
-  console.log(`  ${kleur.green('✓')} Detected: ${kleur.cyan(detected.packageName)}`);
-  console.log(
-    `  ${kleur.green('✓')} Entry: ${kleur.dim(`${detected.command} ${detected.args.join(' ')}`)}`,
+  logger.log(
+    `  ${highlighter.success('✓')} Entry: ${highlighter.dim(sanitizeTerminalText(`${detected.command} ${detected.args.join(' ')}`))}`,
   );
   for (const w of detected.warnings) {
-    console.log(`  ${kleur.yellow('!')} ${kleur.yellow(w)}`);
+    logger.log(`  ${highlighter.warn('!')} ${highlighter.warn(sanitizeTerminalText(w))}`);
   }
 
-  console.log(`  ${kleur.cyan('⏵')} Spawning server to discover tools...`);
-
+  const spawnSpinner = spinner('Spawning server to discover tools...');
   let tools: Tool[] = [];
   let spawnFailure: Error | null = null;
   try {
@@ -87,28 +95,29 @@ export async function runInit(opts: { force?: boolean } = {}): Promise<void> {
   }
 
   if (spawnFailure) {
-    console.log(
-      `  ${kleur.yellow('!')} Could not spawn the server: ${kleur.dim(spawnFailure.message)}`,
-    );
-    console.log(kleur.dim(`    Writing a placeholder config — edit before running.`));
+    spawnSpinner.warn(`Could not spawn the server`);
+    logger.dim(`    ${sanitizeTerminalText(spawnFailure.message)}`);
+    logger.dim(`    Writing a placeholder config — edit before running.`);
     writeFileSync(targetPath, placeholderConfig(detected), 'utf8');
-    console.log(`  ${kleur.green('✓')} Wrote ${TARGET_FILENAME} ${kleur.dim('(placeholder)')}`);
-    console.log();
-    console.log(`  ${kleur.dim('→')} Edit, then run: ${kleur.bold('npx mcptap run')}`);
-    console.log();
+    logger.log(
+      `  ${highlighter.success('✓')} Wrote ${TARGET_FILENAME} ${highlighter.dim('(placeholder)')}`,
+    );
+    logger.break();
+    logger.log(`  ${highlighter.dim('→')} Edit, then run: ${highlighter.bold('npx mcptap run')}`);
+    logger.break();
     return;
   }
-
-  console.log(
-    `  ${kleur.green('✓')} Found ${kleur.bold(String(tools.length))} tool${tools.length === 1 ? '' : 's'}: ` +
-      kleur.cyan(tools.map((t) => t.name).join(', ')),
+  spawnSpinner.succeed(
+    `Found ${highlighter.bold(String(tools.length))} tool${tools.length === 1 ? '' : 's'}: ` +
+      highlighter.info(tools.map((t) => sanitizeTerminalText(t.name)).join(', ')),
   );
 
+  const writeSpinner = spinner('Writing mcptap.config.ts...');
   const config = generateConfig(detected, tools);
   writeFileSync(targetPath, config, 'utf8');
   const testCount = tools.length + 1;
-  console.log(
-    `  ${kleur.green('✓')} Wrote ${TARGET_FILENAME} ${kleur.dim(`(${testCount} test${testCount === 1 ? '' : 's'})`)}`,
+  writeSpinner.succeed(
+    `Wrote ${TARGET_FILENAME} ${highlighter.dim(`(${testCount} test${testCount === 1 ? '' : 's'})`)}`,
   );
 
   printNextSteps(cwd);
@@ -119,16 +128,18 @@ function printNextSteps(cwd: string): void {
   const installCmd = `${pm} add -D mcptap`;
   const installed = hasMcptapInstalled(cwd);
 
-  console.log();
+  logger.break();
   if (!installed) {
-    console.log(`  ${kleur.dim('→')} Install mcptap so the config can import \`defineConfig\`:`);
-    console.log(`     ${kleur.bold(installCmd)}`);
-    console.log();
-    console.log(`  ${kleur.dim('→')} Then run: ${kleur.bold('npx mcptap run')}`);
+    logger.log(
+      `  ${highlighter.dim('→')} Install mcptap so the config can import \`defineConfig\`:`,
+    );
+    logger.log(`     ${highlighter.bold(installCmd)}`);
+    logger.break();
+    logger.log(`  ${highlighter.dim('→')} Then run: ${highlighter.bold('npx mcptap run')}`);
   } else {
-    console.log(`  ${kleur.dim('→')} Run: ${kleur.bold('npx mcptap run')}`);
+    logger.log(`  ${highlighter.dim('→')} Run: ${highlighter.bold('npx mcptap run')}`);
   }
-  console.log();
+  logger.break();
 }
 
 function detectPackageManager(cwd: string): 'pnpm' | 'npm' | 'yarn' | 'bun' {
@@ -260,17 +271,17 @@ function toSlug(name: string): string {
     .toLowerCase();
 }
 
-function generateConfig(detected: Detected, tools: Tool[]): string {
+export function generateConfig(detected: Detected, tools: Tool[]): string {
   const argsLiteral = JSON.stringify(detected.args);
   const toolAssertions = tools
     .map(
       (t) =>
         `    {
-      name: 'lists tool: ${escape(t.name)}',
+      name: ${jsString(`lists tool: ${t.name}`)},
       assert: async (server) => {
         const tools = await server.listTools();
-        if (!tools.find((tool) => tool.name === '${escape(t.name)}')) {
-          throw new Error('${escape(t.name)} missing from tool list');
+        if (!tools.find((tool) => tool.name === ${jsString(t.name)})) {
+          throw new Error(${jsString(`${t.name} missing from tool list`)});
         }
       },
     },`,
@@ -282,9 +293,9 @@ function generateConfig(detected: Detected, tools: Tool[]): string {
 // Generated by \`mcptap init\` — edit freely.
 
 export default defineConfig({
-  slug: '${detected.slug}',
+  slug: ${jsString(detected.slug)},
   server: {
-    command: '${detected.command}',
+    command: ${jsString(detected.command)},
     args: ${argsLiteral},
   },
   tests: [
@@ -306,9 +317,9 @@ function placeholderConfig(detected: Detected): string {
 // Fill in real tests below before running.
 
 export default defineConfig({
-  slug: '${detected.slug}',
+  slug: ${jsString(detected.slug)},
   server: {
-    command: '${detected.command}',
+    command: ${jsString(detected.command)},
     args: ${JSON.stringify(detected.args)},
   },
   tests: [
@@ -326,6 +337,6 @@ export default defineConfig({
 `;
 }
 
-function escape(s: string): string {
-  return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+function jsString(value: string): string {
+  return JSON.stringify(value);
 }

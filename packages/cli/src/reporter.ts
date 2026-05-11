@@ -1,5 +1,6 @@
 import kleur from 'kleur';
 import type { RunOutput, TestResult } from '@mcptap/core';
+import { sanitizeTerminalText } from './terminal.js';
 
 const PASS = kleur.green('✓');
 const FAIL = kleur.red('✗');
@@ -8,8 +9,8 @@ const NEW = kleur.yellow('+');
 const UPDATED = kleur.cyan('↻');
 
 export function reportTerminal(run: RunOutput, configPath: string): void {
-  const head = `${kleur.bold('mcptap')} ${kleur.dim('run')} ${kleur.cyan(run.slug)}`;
-  const cfg = kleur.dim(`(${configPath.replace(process.cwd() + '/', '')})`);
+  const head = `${kleur.bold('mcptap')} ${kleur.dim('run')} ${kleur.cyan(sanitizeTerminalText(run.slug))}`;
+  const cfg = kleur.dim(`(${sanitizeTerminalText(configPath.replace(process.cwd() + '/', ''))})`);
   console.log();
   console.log(`${head}  ${cfg}`);
   console.log();
@@ -17,7 +18,7 @@ export function reportTerminal(run: RunOutput, configPath: string): void {
   for (const r of run.results) {
     const tag = snapshotTag(r);
     console.log(
-      `  ${glyph(r)} ${r.name}${tag} ${kleur.dim(`(${formatDuration(r.duration_ms)})`)}`,
+      `  ${glyph(r)} ${sanitizeTerminalText(r.name)}${tag} ${kleur.dim(`(${formatDuration(r.duration_ms)})`)}`,
     );
     if (r.status === 'fail' && r.error) {
       printError(r);
@@ -86,7 +87,7 @@ function summary(run: RunOutput): string {
 
 function printError(r: TestResult): void {
   if (!r.error) return;
-  const msg = r.error.message
+  const msg = sanitizeTerminalText(r.error.message)
     .split('\n')
     .map((l) => '      ' + l)
     .join('\n');
@@ -98,3 +99,4 @@ function formatDuration(ms: number): string {
   if (ms < 1000) return `${Math.round(ms)}ms`;
   return `${(ms / 1000).toFixed(2)}s`;
 }
+

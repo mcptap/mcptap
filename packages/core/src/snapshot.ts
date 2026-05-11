@@ -24,6 +24,13 @@ type SnapshotFile = {
   snapshots: Record<string, string>;
 };
 
+function emptySnapshotFile(): SnapshotFile {
+  return {
+    schema_version: SNAPSHOT_FILE_VERSION,
+    snapshots: Object.create(null) as Record<string, string>,
+  };
+}
+
 export type SnapshotOutcome =
   | { kind: 'matched' }
   | { kind: 'created'; serialized: string }
@@ -43,7 +50,7 @@ export function snapshotFilePath(configPath: string): string {
 export function loadSnapshots(configPath: string): SnapshotFile {
   const p = snapshotFilePath(configPath);
   if (!existsSync(p)) {
-    return { schema_version: SNAPSHOT_FILE_VERSION, snapshots: {} };
+    return emptySnapshotFile();
   }
   const raw = readFileSync(p, 'utf8');
   const parsed = JSON.parse(raw) as SnapshotFile;
@@ -54,7 +61,15 @@ export function loadSnapshots(configPath: string): SnapshotFile {
   ) {
     throw new Error(`malformed snapshot file at ${p}`);
   }
-  return parsed;
+
+  const file = emptySnapshotFile();
+  for (const [key, value] of Object.entries(parsed.snapshots)) {
+    if (typeof value !== 'string') {
+      throw new Error(`malformed snapshot file at ${p}`);
+    }
+    file.snapshots[key] = value;
+  }
+  return file;
 }
 
 export function saveSnapshots(configPath: string, file: SnapshotFile): void {
@@ -171,12 +186,19 @@ export function compareSnapshot(
   options: { mask?: SnapshotMask; update?: boolean } = {},
 ): SnapshotOutcome {
   const actualSerialized = serializeForSnapshot(actualValue, options.mask);
-  const expected = file.snapshots[testName];
 
-  if (expected === undefined) {
-    file.snapshots[testName] = actualSerialized;
+  if (!Object.hasOwn(file.snapshots, testName)) {
+    Object.defineProperty(file.snapshots, testName, {
+      value: actualSerialized,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
     return { kind: 'created', serialized: actualSerialized };
   }
+
+  // hasOwn was true above; the indexed read is guaranteed to be a string.
+  const expected = file.snapshots[testName] as string;
 
   if (expected === actualSerialized) {
     return { kind: 'matched' };
