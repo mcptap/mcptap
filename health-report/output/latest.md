@@ -1,10 +1,10 @@
-# MCP Health Report — 2026-05-11
+# MCP Health Report — 2026-05-25
 
-Automated weekly run of [mcptap](https://github.com/mcptap/mcptap) against 6 community MCP servers. Each server is spawned, `tools/list` is called, and tool descriptions are deterministically scored. No authenticated tool calls; this report measures *surface health*, not behavioral correctness.
+Automated weekly run of [mcptap](https://github.com/mcptap/mcptap) against 5 community MCP servers. Each server is spawned, `tools/list` is called, and tool descriptions are deterministically scored. No authenticated tool calls; this report measures *surface health*, not behavioral correctness.
 
 ## Summary
 
-- Servers reachable: **5 / 6**
+- Servers reachable: **5 / 5**
 - Total tools surfaced: **53**
 - Average tool-description quality: **88 / 100**
 - Total tokens across all surfaces: **6,357**
@@ -13,22 +13,11 @@ Automated weekly run of [mcptap](https://github.com/mcptap/mcptap) against 6 com
 
 | Server | Status | Tools | Score | Tokens | Duration |
 | --- | --- | --- | --- | --- | --- |
-| `@modelcontextprotocol/filesystem` | ✅ ok | 14 | 🟡 82 | 1613 | 9.3s |
-| `@modelcontextprotocol/everything` | ✅ ok | 13 | 🟢 97 | 1106 | 4.7s |
-| `@modelcontextprotocol/memory` | ✅ ok | 9 | 🟢 89 | 868 | 2.8s |
-| `@modelcontextprotocol/sequential-thinking` | ✅ ok | 1 | 🟡 75 | 849 | 2.9s |
-| `@modelcontextprotocol/fetch` | ❌ unreachable | — | — | — | 1.4s |
-| `@jcornudella/zoomdocs-mcp` | ✅ ok | 16 | 🟢 99 | 1921 | 5.0s |
-
-## Unreachable servers
-
-### `@modelcontextprotocol/fetch`
-
-```
-MCP error -32000: Connection closed
-```
-
-_Fetch URL contents as Markdown._
+| `@modelcontextprotocol/filesystem` | ✅ ok | 14 | 🟡 82 | 1613 | 4.7s |
+| `@modelcontextprotocol/everything` | ✅ ok | 13 | 🟢 97 | 1106 | 3.0s |
+| `@modelcontextprotocol/memory` | ✅ ok | 9 | 🟢 89 | 868 | 2.2s |
+| `@modelcontextprotocol/sequential-thinking` | ✅ ok | 1 | 🟡 75 | 849 | 2.5s |
+| `@jcornudella/zoomdocs-mcp` | ✅ ok | 16 | 🟢 99 | 1921 | 3.7s |
 
 ## Reachable servers
 
@@ -74,4 +63,4 @@ _Joan’s own MCP server — included as a control sample._
 
 ---
 
-_Run by [mcptap](https://github.com/mcptap/mcptap) on 2026-05-11T03:51:10.609Z. Want your server here? Open an issue at [mcptap/mcptap/issues](https://github.com/mcptap/mcptap/issues)._
+_Run by [mcptap](https://github.com/mcptap/mcptap) on 2026-05-25T12:38:42.450Z. Want your server here? Open an issue at [mcptap/mcptap/issues](https://github.com/mcptap/mcptap/issues)._
