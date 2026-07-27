@@ -1,34 +1,23 @@
-# MCP Health Report — 2026-05-11
+# MCP Health Report — 2026-07-27
 
-Automated weekly run of [mcptap](https://github.com/mcptap/mcptap) against 6 community MCP servers. Each server is spawned, `tools/list` is called, and tool descriptions are deterministically scored. No authenticated tool calls; this report measures *surface health*, not behavioral correctness.
+Automated weekly run of [mcptap](https://github.com/mcptap/mcptap) against 5 community MCP servers. Each server is spawned, `tools/list` is called, and tool descriptions are deterministically scored. No authenticated tool calls; this report measures *surface health*, not behavioral correctness.
 
 ## Summary
 
-- Servers reachable: **5 / 6**
-- Total tools surfaced: **53**
+- Servers reachable: **5 / 5**
+- Total tools surfaced: **65**
 - Average tool-description quality: **88 / 100**
-- Total tokens across all surfaces: **6,357**
+- Total tokens across all surfaces: **9,770**
 
 ## Results
 
 | Server | Status | Tools | Score | Tokens | Duration |
 | --- | --- | --- | --- | --- | --- |
-| `@modelcontextprotocol/filesystem` | ✅ ok | 14 | 🟡 82 | 1613 | 9.3s |
-| `@modelcontextprotocol/everything` | ✅ ok | 13 | 🟢 97 | 1106 | 4.7s |
-| `@modelcontextprotocol/memory` | ✅ ok | 9 | 🟢 89 | 868 | 2.8s |
-| `@modelcontextprotocol/sequential-thinking` | ✅ ok | 1 | 🟡 75 | 849 | 2.9s |
-| `@modelcontextprotocol/fetch` | ❌ unreachable | — | — | — | 1.4s |
-| `@jcornudella/zoomdocs-mcp` | ✅ ok | 16 | 🟢 99 | 1921 | 5.0s |
-
-## Unreachable servers
-
-### `@modelcontextprotocol/fetch`
-
-```
-MCP error -32000: Connection closed
-```
-
-_Fetch URL contents as Markdown._
+| `@modelcontextprotocol/filesystem` | ✅ ok | 14 | 🟡 82 | 1636 | 4.1s |
+| `@modelcontextprotocol/everything` | ✅ ok | 13 | 🟢 97 | 1060 | 3.1s |
+| `@modelcontextprotocol/memory` | ✅ ok | 9 | 🟢 89 | 868 | 2.4s |
+| `@modelcontextprotocol/sequential-thinking` | ✅ ok | 1 | 🟡 75 | 845 | 2.6s |
+| `@jcornudella/zoomdocs-mcp` | ✅ ok | 28 | 🟢 97 | 5361 | 3.8s |
 
 ## Reachable servers
 
@@ -38,7 +27,7 @@ _Read/write/list files under a sandboxed root._
 
 - Tools (14): `read_file`, `read_text_file`, `read_media_file`, `read_multiple_files`, `write_file`, `edit_file`, `create_directory`, `list_directory`, `list_directory_with_sizes`, `directory_tree`, `move_file`, `search_files`, `get_file_info`, `list_allowed_directories`
 - Average quality: 🟡 82
-- Tokens (whole tool surface): 1613
+- Tokens (whole tool surface): 1636
 
 ### `@modelcontextprotocol/everything`
 
@@ -46,7 +35,7 @@ _Reference server demonstrating every MCP capability._
 
 - Tools (13): `echo`, `get-annotated-message`, `get-env`, `get-resource-links`, `get-resource-reference`, `get-structured-content`, `get-sum`, `get-tiny-image`, `gzip-file-as-resource`, `toggle-simulated-logging`, `toggle-subscriber-updates`, `trigger-long-running-operation`, `simulate-research-query`
 - Average quality: 🟢 97
-- Tokens (whole tool surface): 1106
+- Tokens (whole tool surface): 1060
 
 ### `@modelcontextprotocol/memory`
 
@@ -62,16 +51,16 @@ _Structured multi-step reasoning tool._
 
 - Tools (1): `sequentialthinking`
 - Average quality: 🟡 75
-- Tokens (whole tool surface): 849
+- Tokens (whole tool surface): 845
 
 ### `@jcornudella/zoomdocs-mcp`
 
 _Joan’s own MCP server — included as a control sample._
 
-- Tools (16): `zoomdocs_login`, `zoomdocs_status`, `zoomdocs_search`, `zoomdocs_list`, `zoomdocs_get_metadata`, `zoomdocs_read`, `zoomdocs_write`, `zoomdocs_capture_start`, `zoomdocs_capture_stop`, `zoomdocs_capture_status`, `zoomdocs_delete`, `zoomdocs_move`, `zoomdocs_list_blocks`, `zoomdocs_append_to_block`, `zoomdocs_replace_block_text`, `zoomdocs_rename`
-- Average quality: 🟢 99
-- Tokens (whole tool surface): 1921
+- Tools (28): `zoomdocs_login`, `zoomdocs_status`, `zoomdocs_search`, `zoomdocs_list`, `zoomdocs_get_metadata`, `zoomdocs_get_edit_outline`, `zoomdocs_get_access_info`, `zoomdocs_get_comments`, `zoomdocs_add_doc_comment`, `zoomdocs_reply_to_comment`, `zoomdocs_resolve_comment_thread`, `zoomdocs_reopen_comment_thread`, `zoomdocs_delete_comment`, `zoomdocs_add_inline_comment`, `zoomdocs_add_comment_reaction`, `zoomdocs_search_share_targets`, `zoomdocs_set_link_access`, `zoomdocs_add_user_collaborator`, `zoomdocs_set_user_collaborator_role`, `zoomdocs_remove_user_collaborator`, `zoomdocs_read`, `zoomdocs_create_doc`, `zoomdocs_edit_doc`, `zoomdocs_edit_doc_batch`, `zoomdocs_create_replacement_copy`, `zoomdocs_delete`, `zoomdocs_move`, `zoomdocs_rename`
+- Average quality: 🟢 97
+- Tokens (whole tool surface): 5361
 
 ---
 
-_Run by [mcptap](https://github.com/mcptap/mcptap) on 2026-05-11T03:51:10.609Z. Want your server here? Open an issue at [mcptap/mcptap/issues](https://github.com/mcptap/mcptap/issues)._
+_Run by [mcptap](https://github.com/mcptap/mcptap) on 2026-07-27T12:33:17.878Z. Want your server here? Open an issue at [mcptap/mcptap/issues](https://github.com/mcptap/mcptap/issues)._
